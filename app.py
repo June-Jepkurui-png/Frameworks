@@ -8,7 +8,7 @@ sns.set(style="whitegrid")
 
 # -------------------------------
 # Load Data
-# -------------------------------
+# --------------------------
 @st.cache_data
 def load_data():
     df = pd.read_csv("metadata_cleaned.csv", low_memory=False)
