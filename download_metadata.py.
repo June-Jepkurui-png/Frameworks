@@ -1,0 +1,15 @@
+import kagglehub
+import os
+import pandas as pd
+
+# Download dataset
+path = kagglehub.dataset_download("allen-institute-for-ai/CORD-19-research-challenge")
+
+# Path to metadata.csv
+metadata_path = os.path.join(path, "metadata.csv")
+
+# Load into Pandas
+df = pd.read_csv(metadata_path, low_memory=False)
+
+print("✅ Metadata loaded successfully!")
+print(df.head())

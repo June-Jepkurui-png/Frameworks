@@ -1,77 +1,52 @@
-import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from wordcloud import WordCloud
+import streamlit as st
+import os
 
-# Set style
-sns.set(style="whitegrid")
+st.title("🍷 Wine Reviews Analysis")
 
-# -------------------------------
-# Load Data
-# --------------------------
+# Function to load data (try local CSV first, fallback to Kaggle path)
 @st.cache_data
 def load_data():
-    df = pd.read_csv("metadata_cleaned.csv", low_memory=False)
-    return df
+    local_file = "winemag-data_first150k.csv"
+    kaggle_path = os.path.expanduser(
+        "~/.cache/kagglehub/datasets/zynicide/wine-reviews/versions/4/winemag-data_first150k.csv"
+    )
+    if os.path.exists(local_file):
+        return pd.read_csv(local_file)
+    elif os.path.exists(kaggle_path):
+        return pd.read_csv(kaggle_path, low_memory=False)
+    else:
+        st.error("❌ Dataset not found. Please ensure the CSV is available.")
+        return pd.DataFrame()
 
+# Load dataset
 df = load_data()
 
-# -------------------------------
-# App Layout
-# -------------------------------
-st.title("📊 CORD-19 Data Explorer")
-st.write("Interactive exploration of COVID-19 research papers")
+if not df.empty:
+    st.success(f"✅ Loaded dataset with {df.shape[0]:,} rows and {df.shape[1]} columns")
 
-# -------------------------------
-# Sidebar Filters
-# -------------------------------
-st.sidebar.header("Filters")
+    # Show a preview
+    st.subheader("📊 Dataset Preview")
+    st.dataframe(df.head())
 
-# Year filter
-years = df['year'].dropna().unique()
-year_range = st.sidebar.slider(
-    "Select Year Range",
-    int(df['year'].min()),
-    int(df['year'].max()),
-    (2019, 2021)
-)
+    # Country distribution
+    st.subheader("🌍 Top 10 Countries by Number of Reviews")
+    top_countries = df["country"].value_counts().head(10)
+    st.bar_chart(top_countries)
 
-# Filter data
-filtered_df = df[(df['year'] >= year_range[0]) & (df['year'] <= year_range[1])]
+    # Average points by country
+    st.subheader("🏅 Average Points by Country (Top 10)")
+    avg_points = df.groupby("country")["points"].mean().sort_values(ascending=False).head(10)
+    st.bar_chart(avg_points)
 
-# -------------------------------
-# Show Data Sample
-# -------------------------------
-st.subheader("Sample of the Dataset")
-st.write(filtered_df.head(10))
-
-# -------------------------------
-# Publications by Year
-# -------------------------------
-st.subheader("Publications by Year")
-year_counts = filtered_df['year'].value_counts().sort_index()
-
-fig, ax = plt.subplots(figsize=(10,5))
-sns.barplot(x=year_counts.index, y=year_counts.values, palette="viridis", ax=ax)
-ax.set_title("Number of Publications per Year")
-st.pyplot(fig)
-
-# -------------------------------
-# Top Journals
-# -------------------------------
-st.subheader("Top 10 Journals")
-top_journals = filtered_df['journal'].value_counts().head(10)
-
-fig, ax = plt.subplots(figsize=(10,5))
-sns.barplot(y=top_journals.index, x=top_journals.values, palette="magma", ax=ax)
-ax.set_title("Top 10 Journals Publishing COVID-19 Research")
-st.pyplot(fig)
-
-# -------------------------------
-# Abstract Word Count Distribution
-# -------------------------------
-st.subheader("Abstract Word Count Distribution")
-fig, ax = plt.subplots(figsize=(10,5))
-sns.histplot(filtered_df['abstract_word_count'], bins=50, kde=True, ax=ax)
-ax.set_title("Distribution of Abstract Word Counts")
-st.pyplot(fig)
+    # WordCloud of wine descriptions
+    st.subheader("☁️ WordCloud of Wine Descriptions")
+    text = " ".join(df["description"].dropna().astype(str))
+    wordcloud = WordCloud(width=800, height=400, background_color="white").generate(text)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    st.pyplot(plt)
