@@ -7,7 +7,7 @@ We use **Pandas** for data cleaning, **Matplotlib/Seaborn** for visualization, a
 ## 🚀 Features
 - Load and clean metadata
 - Analyze publications by year and journal
-- Generate word cloud from paper titles
+- Generate word cloud from paper titles 
 - Interactive Streamlit dashboard.
 
 ## 🛠️ Setup
